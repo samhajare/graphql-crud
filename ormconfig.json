@@ -1,0 +1,11 @@
+{
+  "type": "postgres",
+  "host": "localhost",
+  "port": 5432,
+  "username": "postgres",
+  "password": "admin",
+  "database": "graph_ql_db",
+  "synchronize": false,
+  "logging": false,
+  "entities": ["src/entity/**/*.ts"]
+}
