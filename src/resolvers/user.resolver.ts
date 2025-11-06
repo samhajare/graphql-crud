@@ -1,53 +1,27 @@
 import { User } from "../entity/User";
-import { getRepository } from "typeorm";
-import fs from "fs";
-import path from "path";
-
-async function handleUpload(file: any) {
-  if (!file) return null;
-
-  const { createReadStream, filename } = await file;
-  const stream = createReadStream();
-
-  const uploadDir = path.join(__dirname, "../../uploads");
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-  const filePath = path.join(uploadDir, filename);
-  const writeStream = fs.createWriteStream(filePath);
-  stream.pipe(writeStream);
-
-  return `/uploads/${filename}`;
-}
+import AppDataSource from "../data-source.ts";
 
 export const userResolvers = {
-  Upload: {
-    // required for Upload scalar support (Apollo v3)
-  },
-
   Query: {
-    getUsers: () => getRepository(User).find(),
-    getUser: (_, { id }) => getRepository(User).findOneBy({ id })
+    getUsers: () => AppDataSource.getRepository(User).find(),
+    getUser: (_, { id }) => AppDataSource.getRepository(User).findOneBy({ id })
   },
 
   Mutation: {
-    createUser: async (_, { name, email, file }) => {
-      const image_url = await handleUpload(file);
-
-      const user = getRepository(User).create({ name, email, image_url });
-      return await getRepository(User).save(user);
+    createUser: async (_, { name, email }) => {
+      const repo = AppDataSource.getRepository(User);
+      const user = repo.create({ name, email });
+      return await repo.save(user);
     },
 
-    updateUser: async (_, { id, name, email, file }) => {
-      const repo = getRepository(User);
-
-      const image_url = await handleUpload(file);
-      await repo.update(id, { name, email, image_url });
-
+    updateUser: async (_, { id, name, email }) => {
+      const repo = AppDataSource.getRepository(User);
+      await repo.update(id, { name, email });
       return await repo.findOneBy({ id });
     },
 
     deleteUser: async (_, { id }) => {
-      await getRepository(User).delete(id);
+      await AppDataSource.getRepository(User).delete(id);
       return "User deleted successfully";
     }
   }
